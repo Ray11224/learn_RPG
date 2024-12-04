@@ -10,7 +10,7 @@ public class Entity : MonoBehaviour
     public Animator anim { get; private set; }
     public Rigidbody2D rb { get; private set; }
     public EntityFX fx { get; private set; }
-
+    public SpriteRenderer sr { get; private set; }
     #endregion
 
     [Header("Knockback info")]
@@ -37,9 +37,10 @@ public class Entity : MonoBehaviour
 
     protected virtual void Start()
     {
-        fx = GetComponentInChildren<EntityFX>();
+        sr = GetComponentInChildren<SpriteRenderer>();
         anim = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
+        fx = GetComponent<EntityFX>();
     }
 
     protected virtual void Update()
@@ -52,7 +53,7 @@ public class Entity : MonoBehaviour
         fx.StartCoroutine("FlashFX");
         StartCoroutine("HitKnockback");
 
-        Debug.Log(gameObject.name + "  was damaged!");
+        //Debug.Log(gameObject.name + "  was damaged!");
     }
 
     protected virtual IEnumerator HitKnockback()
@@ -82,9 +83,7 @@ public class Entity : MonoBehaviour
         rb.velocity = new Vector2(_xVelocity, _yVelocity);
         FlipController(_xVelocity);
     }
-
     #endregion
-
     #region Collision
     public virtual bool IsGroundDetected() => Physics2D.Raycast(groundCheck.position, Vector2.down, groundCheckDistance, whatIsGround);
     public virtual bool IsWallDetected() => Physics2D.Raycast(wallCheck.position, Vector2.right * facingDir, wallCheckDistance, whatIsGround);
@@ -96,8 +95,6 @@ public class Entity : MonoBehaviour
         Gizmos.DrawWireSphere(attackCheck.position, attackCheckRadius);
     }
     #endregion
-
-
     #region Flip
     public virtual void Flip()
     {
@@ -113,6 +110,13 @@ public class Entity : MonoBehaviour
         else if (_x < 0 && facingRight)
             Flip();
     }
-
     #endregion
+
+    public void MakeTransprent(bool _transprent)
+    {
+        if (_transprent)
+            sr.color = Color.clear;
+        else
+            sr.color = Color.white;
+    }
 }

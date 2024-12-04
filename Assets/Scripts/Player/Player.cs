@@ -4,27 +4,26 @@ using UnityEngine;
 
 public class Player : Entity
 {
-
     [Header("Attack details")]
     public Vector2[] attackMovement;
+    public float counterAttackDuration = .2f;
     
 
     public bool isBusy { get; private set; }
     [Header("Move info")]
     public float moveSpeed = 12f;
     public float jumpForce;
+    public float swordReturnImpact;
 
-    [Header("Dash info")]
-    [SerializeField] private float dashCooldown;
-    private float dashUsageTimer;
+    [Header("Dash info")]   
     public float dashSpeed;
     public float dashDuration;
     public float dashDir { get; private set; }
 
-   
-   
 
-   
+    public SkillManager skill { get; private set; }
+    public GameObject sword {  get ; private set; }
+
 
     #region States
     public PlayerStateMachine stateMachine { get; private set; }
@@ -38,6 +37,11 @@ public class Player : Entity
     public PlayerDashState dashState { get; private set; }
 
     public PlayerPrimaryAttackState primaryAttack { get; private set; }
+    public PlayerCounterAttackState counterAttack { get; private set; }
+
+    public PlayerAimSwordState aimSowrd { get; private set; }
+    public PlayerCatchSwordState catchSword { get; private set; }
+    public PlayerBlackholeState blackHole { get; private set; }
     #endregion
 
     protected override void Awake()
@@ -54,11 +58,18 @@ public class Player : Entity
         wallJump = new PlayerWallJumpState(this, stateMachine, "Jump");
 
         primaryAttack = new PlayerPrimaryAttackState(this, stateMachine, "Attack");
+        counterAttack = new PlayerCounterAttackState(this, stateMachine, "CounterAttack");
+
+        aimSowrd = new PlayerAimSwordState(this, stateMachine, "AimSword");
+        catchSword = new PlayerCatchSwordState(this, stateMachine, "CatchSword");
+        blackHole = new PlayerBlackholeState(this, stateMachine, "Jump");
     }
 
     protected override void Start()
     {
         base.Start();
+
+        skill = SkillManager.instance;
 
         stateMachine.Initialize(idleState);
 
@@ -73,8 +84,22 @@ public class Player : Entity
 
         stateMachine.currentState.Update();
 
-
         CheckForDashInput();
+
+
+        if (Input.GetKeyDown(KeyCode.F))
+            skill.crystal.CanUseSkill();
+    }
+
+    public void AssignNewSword(GameObject _newSword)
+    {
+        sword = _newSword;
+    }
+
+    public void CatchTheSword()
+    {
+        stateMachine.ChangeState(catchSword);
+        Destroy(sword);
     }
 
     public IEnumerator BusyFor(float _seconds)
@@ -92,12 +117,12 @@ public class Player : Entity
         if (IsWallDetected())
             return;
 
-        dashUsageTimer -= Time.deltaTime;
 
 
-        if (Input.GetKeyDown(KeyCode.LeftShift) && dashUsageTimer < 0)
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && SkillManager.instance.dash.CanUseSkill())
         {
-            dashUsageTimer = dashCooldown;
+
             dashDir = Input.GetAxisRaw("Horizontal");
 
             if (dashDir == 0)
@@ -107,4 +132,5 @@ public class Player : Entity
             stateMachine.ChangeState(dashState);
         }
     }
+
 }
